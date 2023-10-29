@@ -1,0 +1,75 @@
+{
+  "task": "pacmixer_bigk_x8_last"     //  root/task/images|models|options
+  , "model": "plain"           // "plain" | "plain2" if two inputs
+  , "gpu_ids": [0,1,2,3,4,5]             // [0,1,2,3] for 4 GPUs
+  , "dist": true
+
+  , "scale": 8       // broadcast to "netG" if SISR
+  , "n_channels": 1  // broadcast to "datasets", 1 for grayscale, 3 for color
+
+  , "path": {
+    "root": "superresolution"      // "denoising" | "superresolution"
+    , "pretrained_netG": null      // path of pretrained model
+    , "pretrained_netE": null      // path of pretrained model
+  }
+
+
+
+  , "datasets": {
+    "train": {
+      "name": "train_dataset"           
+      , "dataset_type": "sr"            
+      , "dataroot_H": "trainsets/extra_800_multi_scale_factor/hr"              // path of H training dataset
+      , "dataroot_L": "trainsets/extra_800_multi_scale_factor/lr_x8"              // path of L training dataset
+      , "H_size": 176                    
+      , "dataloader_shuffle": true
+      , "dataloader_num_workers": 16
+      , "dataloader_batch_size": 32     
+    }
+    , "test": {
+      "name": "test_dataset"            
+      , "dataset_type": "sr"            
+      , "dataroot_H": "testsets/extra_800_multi_scale_factor/hr"               // path of H testing dataset
+      , "dataroot_L": "testsets/extra_800_multi_scale_factor/lr_x8"               // path of L testing dataset
+      , "H_size": 176       
+    }
+  }
+
+  , "netG": {
+    "net_type": "pacmixsr"  
+    , "in_channels": 1          
+    , "sf": 8          
+    , "hc" : 64  
+    , "head": 4   
+    , "kernel_att": 7   
+    , "init_type": "orthogonal"         // "orthogonal" | "normal" | "uniform" | "xavier_normal" | "xavier_uniform" | "kaiming_normal" | "kaiming_uniform"
+    , "init_bn_type": "uniform"         // "uniform" | "constant"
+    , "init_gain": 0.2
+  }
+
+  , "train": {
+    "G_lossfn_type": "l1"               // "l1" preferred | "l2sum" | "l2" | "ssim" 
+    , "G_lossfn_weight": 1.0            // default
+
+    , "E_decay": 0.999                  // Exponential Moving Average for netG: set 0 to disable; default setting 0.999
+
+    , "G_optimizer_type": "adam"        // fixed, adam is enough
+    , "G_optimizer_lr": 1e-4            // learning rate
+    , "G_optimizer_clipgrad": null      // unused
+    , "G_optimizer_reuse": false
+
+    , "G_scheduler_type": "MultiStepLR" // "MultiStepLR" is enough
+    , "G_scheduler_milestones": [5000, 10000, 15000, 20000]
+    , "G_scheduler_gamma": 0.5
+
+    , "G_regularizer_orthstep": null    // unused
+    , "G_regularizer_clipstep": null    // 
+
+    , "G_param_strict": true
+    , "E_param_strict": true
+
+    , "checkpoint_test": 1000           // for testing
+    , "checkpoint_save": 10000           // for saving model
+    , "checkpoint_print": 200           // for print
+  }
+}
